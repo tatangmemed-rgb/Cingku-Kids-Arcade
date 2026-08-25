@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Android APK
@@ -44,9 +47,22 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Copy APK to repository folder
+        run: |
+          mkdir -p apk
+          cp build/app/outputs/flutter-apk/app-release.apk apk/CINGKU-Kids-Arcade.apk
+
+      - name: Save APK to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apk/CINGKU-Kids-Arcade.apk
+          git commit -m "Update CINGKU Kids Arcade APK [skip ci]" || echo "No APK changes to commit"
+          git push
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: CINGKU-Kids-Arcade-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: apk/CINGKU-Kids-Arcade.apk
           if-no-files-found: error
