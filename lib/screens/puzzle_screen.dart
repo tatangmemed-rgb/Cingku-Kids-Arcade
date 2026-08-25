@@ -9,6 +9,8 @@ class PuzzleScreen extends StatefulWidget {
 }
 
 class _PuzzleScreenState extends State<PuzzleScreen> {
+  final Random _random = Random();
+
   List<int> tiles = [];
   int moves = 0;
   bool won = false;
@@ -16,91 +18,273 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   @override
   void initState() {
     super.initState();
-    resetGame();
+    _newGame();
   }
 
-  void resetGame() {
-    tiles = List.generate(16, (index) => index);
+  void _newGame() {
+    tiles = List.generate(8, (index) => index + 1);
+    tiles.add(0);
+
+    do {
+      tiles.shuffle(_random);
+    } while (!_isSolvable(tiles) || _isSolved());
+
     moves = 0;
     won = false;
 
-    final random = Random();
-
-    for (int i = 0; i < 200; i++) {
-      final emptyIndex = tiles.indexOf(0);
-      final possibleMoves = <int>[];
-
-      final row = emptyIndex ~/ 4;
-      final col = emptyIndex % 4;
-
-      if (row > 0) possibleMoves.add(emptyIndex - 4);
-      if (row < 3) possibleMoves.add(emptyIndex + 4);
-      if (col > 0) possibleMoves.add(emptyIndex - 1);
-      if (col < 3) possibleMoves.add(emptyIndex + 1);
-
-      final selected =
-          possibleMoves[random.nextInt(possibleMoves.length)];
-
-      final temp = tiles[emptyIndex];
-      tiles[emptyIndex] = tiles[selected];
-      tiles[selected] = temp;
+    if (mounted) {
+      setState(() {});
     }
-
-    setState(() {});
   }
 
-  bool canMove(int index) {
-    final emptyIndex = tiles.indexOf(0);
+  bool _isSolved() {
+    for (int i = 0; i < 8; i++) {
+      if (tiles[i] != i + 1) return false;
+    }
+    return tiles[8] == 0;
+  }
 
-    final row = index ~/ 4;
-    final col = index % 4;
-    final emptyRow = emptyIndex ~/ 4;
-    final emptyCol = emptyIndex % 4;
+  bool _isSolvable(List<int> list) {
+    int inversions = 0;
+
+    for (int i = 0; i < list.length; i++) {
+      for (int j = i + 1; j < list.length; j++) {
+        if (list[i] != 0 &&
+            list[j] != 0 &&
+            list[i] > list[j]) {
+          inversions++;
+        }
+      }
+    }
+
+    return inversions.isEven;
+  }
+
+  bool _canMove(int index) {
+    int emptyIndex = tiles.indexOf(0);
+
+    int row = index ~/ 3;
+    int col = index % 3;
+
+    int emptyRow = emptyIndex ~/ 3;
+    int emptyCol = emptyIndex % 3;
 
     return (row == emptyRow && (col - emptyCol).abs() == 1) ||
         (col == emptyCol && (row - emptyRow).abs() == 1);
   }
 
-  void moveTile(int index) {
-    if (won || !canMove(index)) return;
-
-    final emptyIndex = tiles.indexOf(0);
+  void _moveTile(int index) {
+    if (won || !_canMove(index)) return;
 
     setState(() {
-      final temp = tiles[index];
+      int emptyIndex = tiles.indexOf(0);
+
+      int temp = tiles[index];
       tiles[index] = tiles[emptyIndex];
       tiles[emptyIndex] = temp;
 
       moves++;
 
-      checkWin();
+      if (_isSolved()) {
+        won = true;
+      }
     });
   }
 
-  void checkWin() {
-    bool completed = true;
+  Widget _buildTile(int index) {
+    int number = tiles[index];
 
-    for (int i = 1; i < 16; i++) {
-      if (tiles[i - 1] != i) {
-        completed = false;
-        break;
-      }
+    if (number == 0) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.black12,
+          borderRadius: BorderRadius.circular(18),
+        ),
+      );
     }
 
-    if (tiles[15] != 0) {
-      completed = false;
-    }
+    return GestureDetector(
+      onTap: () => _moveTile(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.green.shade400,
+              Colors.green.shade700,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 5,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            '$number',
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-    if (completed) {
-      won = true;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8E1),
+      appBar: AppBar(
+        title: const Text('PUZZLE'),
+        centerTitle: true,
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 25),
 
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (!mounted) return;
+            const Text(
+              '🧩 SUSUN ANGKA',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
+            const SizedBox(height: 8),
+
+            const Text(
+              'Susun angka 1 sampai 8 dengan benar!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'LANGKAH: $moves',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 9,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemBuilder: (context, index) {
+                        return _buildTile(index);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            if (won)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Column(
+                  children: [
+                    Text(
+                      '🎉 HEBAT!',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Kamu berhasil menyusun puzzle!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+
+            const Spacer(),
+
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: _newGame,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text(
+                    'GAME BARU',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}          builder: (context) {
             return AlertDialog(
               title: const Text('🎉 KAMU MENANG!'),
               content: Text(
