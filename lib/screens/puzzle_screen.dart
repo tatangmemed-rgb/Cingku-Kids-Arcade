@@ -31,10 +31,6 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
     moves = 0;
     won = false;
-
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   bool _isSolved() {
@@ -61,25 +57,25 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   }
 
   bool _canMove(int index) {
-    int emptyIndex = tiles.indexOf(0);
+    final emptyIndex = tiles.indexOf(0);
 
-    int row = index ~/ 3;
-    int col = index % 3;
+    final row = index ~/ 3;
+    final col = index % 3;
 
-    int emptyRow = emptyIndex ~/ 3;
-    int emptyCol = emptyIndex % 3;
+    final emptyRow = emptyIndex ~/ 3;
+    final emptyCol = emptyIndex % 3;
 
     return (row == emptyRow && (col - emptyCol).abs() == 1) ||
         (col == emptyCol && (row - emptyRow).abs() == 1);
   }
 
   void _moveTile(int index) {
-    if (won || !_canMove(index)) return;
+    if (won || tiles[index] == 0 || !_canMove(index)) return;
 
     setState(() {
-      int emptyIndex = tiles.indexOf(0);
+      final emptyIndex = tiles.indexOf(0);
 
-      int temp = tiles[index];
+      final temp = tiles[index];
       tiles[index] = tiles[emptyIndex];
       tiles[emptyIndex] = temp;
 
@@ -92,12 +88,182 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   }
 
   Widget _buildTile(int index) {
-    int number = tiles[index];
+    final number = tiles[index];
 
     if (number == 0) {
       return Container(
         decoration: BoxDecoration(
           color: Colors.black12,
+          borderRadius: BorderRadius.circular(18),
+        ),
+      );
+    }
+
+    final correctPosition = index == number - 1;
+
+    return GestureDetector(
+      onTap: () => _moveTile(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: correctPosition
+              ? Colors.green
+              : Colors.deepPurple,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 5,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            '$number',
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8E1),
+      appBar: AppBar(
+        title: const Text('PUZZLE'),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 25),
+
+            const Text(
+              '🧩 SUSUN ANGKA',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Susun angka 1 sampai 8 dengan benar!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              'LANGKAH: $moves',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 9,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemBuilder: (context, index) {
+                      return _buildTile(index);
+                    },
+                  ),
+                ),
+              ),
+            ),
+
+            if (won)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Column(
+                  children: [
+                    Text(
+                      '🎉 HEBAT!',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Kamu berhasil menyusun puzzle!',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(_newGame);
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text(
+                    'ACAK ULANG',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}          color: Colors.black12,
           borderRadius: BorderRadius.circular(18),
         ),
       );
