@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'snake_screen.dart';
+import 'brick_breaker_screen.dart';
 
 class GameItem {
   final String title;
@@ -26,10 +27,11 @@ class HomeScreen extends StatelessWidget {
       screen: SnakeScreen(),
     ),
     const GameItem(
-      title: 'BRICK',
-      emoji: '🧱',
-      subtitle: 'Hancurkan semua!',
-    ),
+  title: 'BRICK',
+  emoji: '🧱',
+  subtitle: 'Hancurkan semua!',
+  screen: BrickBreakerScreen(),
+),
     const GameItem(
       title: 'SPACE',
       emoji: '🚀',
