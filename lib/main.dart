@@ -6,13 +6,11 @@ import 'screens/home_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // CINGKU khusus Android TV: landscape.
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
 
-  // Full screen.
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.immersiveSticky,
   );
